@@ -1,12 +1,13 @@
 ROP B1n-3xp
 
-***To Disable Address Space Layout Randomization***
+- [x] Not Yet Completed#  Under Construction!!!! 
 
-```
+##### To Disable Address Space Layout Randomization
+
+```bash
 echo "0" >  /proc/sys/kernel/randomize_va_space
 ```
 
-- [x] Not Yet Completed#  Under Construction!!!! 
 # **The Stack Difference Between 32 and 64 bit binary**
 
 ##  x86_32
@@ -70,7 +71,7 @@ ropper --file binary --search "pop" #[pop_address]
 ~~~
 
 - ***Writing into the Stack in a 32bit binary***
-	`For example if we are going to write the string “/bin/sh” into the stack. Given that we can only write 4 words at a time into the stack or else we may overwrite the other registers in the process.`
+	> For example if we are going to write the string “/bin/sh” into the stack. Given that we can only write 4 words at a time into the stack or else we may overwrite the other registers in the process.`
  
 	- Writing “/bin” in the stack 
 		- pop_address to clear the registers and then move to the mem_address and then write/overwrite it with “/bin” and then move back to EIP using mov_address , so that we can write the next part of string inside the memory
@@ -91,11 +92,11 @@ ropper --file binary --search "pop" #[pop_address]
 ~~~
 PAYLOAD = offset_padding + rop1 + rop2 + system_address + *4_byte_junk* + mem_address
 ~~~
-We can also use print function and flag_name.txt as argument to cat the flag... rather than getting a shell. If a print function is given in the binary
+> We can also use print function and flag_name.txt as argument to cat the flag... rather than getting a shell. If a print function is given in the binary
 
 - ***Writing into the Stack in a 64bit binary***
 
-	`I didnt wanna take the same example here as “/bin/sh” because it takes only 8bytes so we can complete the rop in a single line given that in 64bit we can write 8 words at a time into the stack as a threshold so to make it more interesting , i am writing the string “/bin/cat *.txt” into the stack.`
+	> I didnt wanna take the same example here as “/bin/sh” because it takes only 8bytes so we can complete the rop in a single line given that in 64bit we can write 8 words at a time into the stack as a threshold so to make it more interesting , i am writing the string “/bin/cat *.txt” into the stack.`
  
 	- Writing “/bin/cat” in the stack 
 		- pop_address to clear the registers and then move to the mem_address and then write/overwrite it with “/bin/cat” and then move back to RIP using mov_address , so that we can write the next part of string inside the memory
@@ -105,7 +106,6 @@ We can also use print function and flag_name.txt as argument to cat the flag... 
 	~~~
 	- Writing “ \*.txt” [Adding a space in the front as only “/bin/cat \*.txt” works and “/bin/cat \*.txt" doesnt]
 		- pop_address to clear the registers and then move to the (mem_address+8)[The plus 8 is because the first 8 elements of the memory is already filled by rop1 ] and then write/overwrite it with “ \*.txt\x00\x00” and then move back to RIP using mov_address , so that we can do a sys_call and call “/bin/cat \*.txt”
-
 	~~~
 	rop2 = pop_address + (mem_address+8) + “ *.txt\x00\x00” + mov_address
 	~~~
@@ -120,7 +120,7 @@ PAYLOAD = offset_padding + rop1 + rop2 + pop_rdi + mem_address + sys_address
 ~~~
 
 
-But I am too lazy to make a ROP chain and then append it with the PAYLOAD.....,So i automated the process to create the ropchain,not the finest program,But it WORKS!!! XD >_<
+> But I am too lazy to make a ROP chain and then append it with the PAYLOAD.....,So i automated the process to create the ropchain,not the finest program,But it WORKS!!! XD >_<
 
 ~~~python
 from pwn import * #[pip2 install pwntools] because, I personally feel python2 is great for pwning binary
