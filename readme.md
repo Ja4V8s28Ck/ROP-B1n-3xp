@@ -98,7 +98,7 @@ We can also use print function and flag_name.txt as argument to cat the flag... 
 	`I didnt wanna take the same example here as “/bin/sh” because it takes only 8bytes so we can complete the rop in a single line given that in 64bit we can write 8 words at a time into the stack as a threshold so to make it more interesting , i am writing the string “/bin/cat *.txt” into the stack.`
  
 	- Writing “/bin/cat” in the stack 
-		- pop_address to clear the registers and then move to the mem_address and then write/overwrite it with “/bin” and then move back to RIP using mov_address , so that we can write the next part of string inside the memory
+		- pop_address to clear the registers and then move to the mem_address and then write/overwrite it with “/bin/cat” and then move back to RIP using mov_address , so that we can write the next part of string inside the memory
 
 	~~~
 	rop1 = pop_address + mem_address + “/bin/cat” + mov_address
