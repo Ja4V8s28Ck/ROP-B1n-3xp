@@ -120,7 +120,7 @@ PAYLOAD = offset_padding + rop1 + rop2 + pop_rdi + mem_address + sys_address
 ~~~
 
 
-> But I am too lazy to make a ROP chain and then append it with the PAYLOAD.....,So i automated the process to create the ropchain,not the finest program,But it WORKS!!! XD >_<
+> But I am too lazy to make a ROP chain and then append it with the PAYLOAD.....,So i automated the process to create the ropchain,not the finest program,But it WORKS at 	somecases!!!, i am working on to find why the below program fails in some binary and works on other
 
 ~~~python
 from pwn import * #[pip2 install pwntools] because, I personally feel python2 is great for pwning binary
