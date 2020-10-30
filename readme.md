@@ -7,10 +7,10 @@ ROP B1n-3xp
 echo "0" >  /proc/sys/kernel/randomize_va_space
 ```
 ## Contents
-- [Part1 : Basics of Writing a ROP chain!](#part1-:-basics-of-writing-a-rop-chain!)
+- [Part1 : Basics of Writing a ROP chain!](#part1-basics-of-writing-a-rop-chain)
 	- [86x_32](#x86_32)
 	- [86x_64](#x86_64)
-- [Part2 : Dealing With Bad Chars](#part2-:-dealing-with-bad-chars)
+- [Part2 : Dealing With Bad Chars](#part2-dealing-with-bad-chars)
 
 ## Part1 : Basics of Writing a ROP chain!
 
