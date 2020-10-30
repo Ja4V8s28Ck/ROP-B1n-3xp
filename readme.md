@@ -1,17 +1,17 @@
 ROP B1n-3xp
 - [x] Not Yet Completed#  Under Construction!!!! 
 
-## Contents
-- [Part1 : Basics of Writing a ROP chain!](#Part1-:-Basics-of-Writing-a-ROP-chain!)
-	- [86x_32](#x86_32)
-	- [86x_64](#x86_64)
-- [Part2 : Dealing With Bad Chars](#Part2-:-Dealing-With-Bad-Chars)
-
 ##### To Disable Address Space Layout Randomization
 
 ```bash
 echo "0" >  /proc/sys/kernel/randomize_va_space
 ```
+## Contents
+- [Part1 : Basics of Writing a ROP chain!](#part1-:-basics-of-writing-a-rop-chain!)
+	- [86x_32](#x86_32)
+	- [86x_64](#x86_64)
+- [Part2 : Dealing With Bad Chars](#part2-:-dealing-with-bad-chars)
+
 ## Part1 : Basics of Writing a ROP chain!
 
 # **The Stack Difference Between 32 and 64 bit binary**
