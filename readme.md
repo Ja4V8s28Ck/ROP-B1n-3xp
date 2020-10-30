@@ -1,4 +1,10 @@
 ROP B1n-3xp
+
+## Contents
+- [Basics of Rop chain](#Part1 : Basics of Writing a ROP chain!)
+	- [86x_32](#x86_32)
+	- [86x_64](#x86_64)
+- [Dealing with Bad Characters](#Part2 : Dealing With Bad Chars)
 ### Part1 : Basics of Writing a ROP chain!
 - [x] Not Yet Completed#  Under Construction!!!! 
 
