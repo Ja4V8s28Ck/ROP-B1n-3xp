@@ -273,11 +273,11 @@ End of assembler dump.
 
 # *Devising a Solution*
 1. Finding the offset of the binary to trigger a buffer overflow.
-	~~~gdb
+	~gdb
 	gef➤  pattern create 50
 	[+] Generating a pattern of 50 bytes
 	aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaama
-	~~~
+	~
 	- Sadly we have too many "a" and "f" , which are the badchars , so we can't check the offset correctly.
 	- Time to make our own payload , i use msf to create a payload without bad characters.
 	~~~bash
